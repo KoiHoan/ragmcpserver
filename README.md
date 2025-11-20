@@ -55,7 +55,7 @@ python knowledge.py
 ### 2. Chạy MCP server
 
 ```bash
-uv run mcp dev server.py
+uv run mcp dev main.py
 ```
 
 ## Cấu trúc project
