@@ -1,0 +1,22 @@
+# Core dependencies
+langchain-community>=0.3.0
+langchain-text-splitters>=0.3.0
+langchain-chroma>=0.1.0
+langchain-huggingface>=0.1.0
+langchain-core>=0.3.0
+
+# Document processing
+PyPDF2>=3.0.0
+PyMuPDF>=1.23.0
+pytesseract>=0.3.10
+Pillow>=10.0.0
+
+# Vector store
+chromadb>=0.4.0
+
+# Embeddings
+sentence-transformers>=2.2.2
+huggingface-hub>=0.20.0
+
+# Utilities
+numpy>=1.25.0
