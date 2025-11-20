@@ -49,6 +49,7 @@ Copy các file sau vào folder mới:
 ### 1. Xây dựng vector database từ PDF
 
 ```bash
+pip install -r requirements.txt
 python knowledge.py
 ```
 
