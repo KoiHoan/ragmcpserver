@@ -1,7 +1,7 @@
 # knowledge.py - Vector DB for RAG with PDF and TXT support (with OCR)
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_chroma import Chroma
+from langchain_pinecone import PineconeVectorStore
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_core.documents import Document
 import os
@@ -17,15 +17,19 @@ DOCUMENT_PATHS = [
     os.path.join(SCRIPT_DIR, "ghidra_docs", "guide(80-90).pdf")
 ]
 
-PERSIST_DIRECTORY = os.path.join(SCRIPT_DIR, "ghidra_rag_db")
-HUGGINGFACE_API_KEY = "key-here"
+PINECONE_API_KEY = "key_here"  
+PINECONE_INDEX_NAME = "rag-mcp-server" 
+HUGGINGFACE_API_KEY = "key_here" 
+
+# Set Pinecone API key as environment variable
+os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 
 pytesseract.pytesseract.tesseract_cmd = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
 
 class GhidraKnowledgeBase:
-    def __init__(self, document_paths: List[str] = None, persist_directory: str = PERSIST_DIRECTORY):
+    def __init__(self, document_paths: List[str] = None, index_name: str = PINECONE_INDEX_NAME):
         self.document_paths = document_paths or DOCUMENT_PATHS
-        self.persist_directory = persist_directory
+        self.index_name = index_name
         self.vectorstore = None
         self.embeddings = HuggingFaceEndpointEmbeddings(
             model="sentence-transformers/all-mpnet-base-v2",
@@ -109,23 +113,20 @@ class GhidraKnowledgeBase:
         if not splits:
             raise ValueError("Cannot create chunks from documents")
         
-        self.vectorstore = Chroma.from_documents(
+        self.vectorstore = PineconeVectorStore.from_documents(
             documents=splits,
             embedding=self.embeddings,
-            persist_directory=self.persist_directory
+            index_name=self.index_name
         )
         return self.vectorstore
     
     def load_vector_db(self):
         """Load existing vector database"""
-        if os.path.exists(self.persist_directory):
-            self.vectorstore = Chroma(
-                persist_directory=self.persist_directory,
-                embedding_function=self.embeddings
-            )
-            return self.vectorstore
-        else:
-            raise ValueError(f"Vector DB does not exist at {self.persist_directory}")
+        self.vectorstore = PineconeVectorStore(
+            index_name=self.index_name,
+            embedding=self.embeddings
+        )
+        return self.vectorstore
     
     def query_relevant_chunks(self, query: str, k: int = 5) -> List[Dict[str, str]]:
         """Query to get k most relevant chunks
@@ -223,24 +224,15 @@ class GhidraKnowledgeBase:
         Returns:
             Dict with stats
         """
-        if not os.path.exists(self.persist_directory):
-            return {
-                "status": "not_exists",
-                "message": "Database not found",
-                "location": self.persist_directory
-            }
-        
         try:
             if self.vectorstore is None:
                 self.load_vector_db()
             
-            collection = self.vectorstore._collection
-            count = collection.count()
-            
+            # Pinecone doesn't have direct count method, return basic info
             return {
                 "status": "exists",
-                "total_chunks": str(count),
-                "location": self.persist_directory
+                "index_name": self.index_name,
+                "message": "Connected to Pinecone index"
             }
         except Exception as e:
             return {"status": "error", "message": str(e)}
@@ -258,10 +250,10 @@ def get_knowledge_base() -> GhidraKnowledgeBase:
 if __name__ == "__main__":
     # Test build vector DB
     kb = GhidraKnowledgeBase()
-    kb.build_vector_db()
+    # kb.build_vector_db()
     
     # Test query
-    results = kb.query_relevant_chunks("What is hypervisor host domain", k=3)
+    results = kb.query_relevant_chunks("What is types of interference", k=3)
     for result in results:
         print(f"\n--- Rank {result['rank']} (Source: {result['source']}, Page: {result['page']}) ---")
         print(result['content'][:200] + "...")
