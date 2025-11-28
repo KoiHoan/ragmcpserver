@@ -6,7 +6,8 @@ cd to the `examples/snippets/clients` directory and run:
 """
 from typing import List, Dict
 from mcp.server.fastmcp import FastMCP
-from knowledge import get_knowledge_base
+from builder import DocumentBuilder
+from retriever import get_retriever
 from prompts import (
    prompt_analyze_current_function,
 prompt_analyze_current_file,
@@ -40,16 +41,8 @@ def query_knowledge(query: str, k: int = 5) -> List[Dict[str, str]]:
         # Limit k to avoid overload
         k = min(max(1, k), 20)
         
-        kb = get_knowledge_base()
-        
-        # Try to load existing DB first, if not found it will build
-        try:
-            kb.load_vector_db()
-        except ValueError:
-            # DB doesn't exist, try to build it
-            kb.build_vector_db()
-        
-        results = kb.query_relevant_chunks(query, k=k)
+        retriever = get_retriever()
+        results = retriever.query(query, k=k)
         
         return results
     except Exception as e:
@@ -63,15 +56,8 @@ def query_knowledge_with_scores(query: str, k: int = 5) -> List[Dict[str, str]]:
         # Limit k to avoid overload
         k = min(max(1, k), 20)
         
-        kb = get_knowledge_base()
-        
-        # Try to load existing DB first
-        try:
-            kb.load_vector_db()
-        except ValueError:
-            kb.build_vector_db()
-        
-        results = kb.query_with_scores(query, k=k)
+        retriever = get_retriever()
+        results = retriever.query_with_scores(query, k=k)
         
         return results
     except Exception as e:
@@ -85,8 +71,8 @@ def add_knowledge_text(text: str, source_name: str = "manual_entry") -> Dict[str
         if not text or not text.strip():
             return {"status": "error", "message": "Text content is empty"}
         
-        kb = get_knowledge_base()
-        result = kb.add_text_to_db(text_content=text, source_name=source_name)
+        builder = DocumentBuilder()
+        result = builder.add_text_to_db(text_content=text, source_name=source_name)
         
         return result
     except Exception as e:
@@ -98,8 +84,8 @@ def get_knowledge_info() -> Dict[str, str]:
 
     """
     try:
-        kb = get_knowledge_base()
-        info = kb.get_db_info()
+        retriever = get_retriever()
+        info = retriever.get_db_info()
         return info
     except Exception as e:
         return {"status": "error", "message": str(e)}
