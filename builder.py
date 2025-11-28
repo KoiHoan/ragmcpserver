@@ -17,9 +17,14 @@ load_dotenv()
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-DOCUMENT_PATHS = [
-    os.path.join(SCRIPT_DIR, "ghidra_docs", "guide(80-90).pdf")
-]
+# Auto-discover all PDF and TXT files in ghidra_docs folder
+DOCS_DIR = os.path.join(SCRIPT_DIR, "ghidra_docs")
+DOCUMENT_PATHS = []
+if os.path.exists(DOCS_DIR):
+    for file in os.listdir(DOCS_DIR):
+        if file.lower().endswith(('.pdf', '.txt')):
+            DOCUMENT_PATHS.append(os.path.join(DOCS_DIR, file))
+    DOCUMENT_PATHS.sort()  # Sort alphabetically for consistent processing
 
 # Load from environment variables (from .env file)
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
@@ -116,6 +121,8 @@ class DocumentBuilder:
     def load_documents(self) -> List[Document]:
         """Load all documents from configured paths"""
         all_docs = []
+        
+        print(f"Found {len(self.document_paths)} document(s) to process")
         
         for doc_path in self.document_paths:
             if not os.path.exists(doc_path):
