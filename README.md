@@ -1,84 +1,72 @@
-# RAG MCP Server
-
-MCP Server với RAG (Retrieval-Augmented Generation) để truy vấn tài liệu PDF sử dụng Pinecone cloud vector database.
+# RAG MCP Server - Quick Start
 
 ## Yêu cầu
 
-- Python 3.12+
-- Tesseract OCR
-- Pinecone API key (miễn phí)
-- Huggingface API key (miễn phí)
+- Docker Desktop
+- Pinecone API key - [Sign up](https://app.pinecone.io/)
+- OpenAI API key - [Get key](https://platform.openai.com/api-keys)
+- Claude Desktop
 
-## Cài đặt
-
-### 1. Tạo project mới
+## Cài đặt (Docker)
 
 ```bash
-uv init rag-server
-cd rag-server
+# 1. Clone repository
+git clone https://github.com/KoiHoan/ragmcpserver.git
+cd mcp-server-demo
+
+# 2. Tạo .env file
+copy .env.example .env  # Windows
+cp .env.example .env    # Linux/macOS
+
+# Chỉnh sửa .env:
+# PINECONE_API_KEY=your-key
+# OPENAI_API_KEY=your-key
+# PINECONE_INDEX_NAME=rag-mcp-server
+
+# 3. Build Docker image
+docker build -t rag-mcp-server:latest .
+
+# 4*. Build vector database from documents (DONT RUN)
+d.o.c.k.e.r run --rm -i --env-file .env rag-mcp-server:latest python /app/builder.py
 ```
 
-### 2. Cài đặt dependencies
+## Kết nối Claude Desktop
+
+**Windows:**
+
+Edit `%APPDATA%\Claude\claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "rag-knowledge": {
+      "command": "C:\\Users\\YourUsername\\path\\to\\mcp-server-demo\\run_mcp_in_docker.bat"
+    }
+  }
+}
+```
+
+**Linux/macOS:**
+
+Edit `~/.config/Claude/claude_desktop_config.json` (Linux) hoặc `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+
+```json
+{
+  "mcpServers": {
+    "rag-knowledge": {
+      "command": "/absolute/path/to/mcp-server-demo/run_mcp_in_docker.sh"
+    }
+  }
+}
+```
 
 ```bash
-uv add "mcp[cli]"
-pip install "mcp[cli]"
+# Linux/macOS: Make script executable
+chmod +x run_mcp_in_docker.sh
 ```
 
-### 3. Copy các file cần thiết
+**Restart Claude Desktop:**
 
-Copy các file sau vào folder mới:
-
-- `main.py`
-- `knowledge.py`
-- Folder `ghidra_docs` (chứa tài liệu PDF)
-
-### 4. Cấu hình
-
-**Pinecone API Key:**
-
-- Ib discord để lấy API key và thay vào **line 20** trong `knowledge.py`
-
-**Huggingface API Key:**
-
-- Đăng ký tài khoản miễn phí tại [Huggingface](https://huggingface.co/)
-- Lấy API key và thay vào **line 22** trong `knowledge.py`
-
-**Tesseract OCR:**
-
-- Tải và cài đặt [Tesseract OCR](https://github.com/tesseract-ocr/tesseract)
-- Cập nhật đường dẫn Tesseract tại **line 25** trong `knowledge.py`
-
-## Sử dụng
-
-### 1. Xây dựng vector database và upload lên Pinecone
-
-```bash
-pip install -r requirements.txt
-python knowledge.py
-```
-
-Vector database sẽ được upload lên Pinecone cloud.
-
-### 2. Chạy MCP server
-
-```bash
-uv run mcp dev main.py
-```
-
-## Cấu trúc project
-
-```
-rag-server/
-├── main.py              # MCP server tools
-├── knowledge.py         # RAG utilities với Pinecone integration
-├── requirements.txt     # Python dependencies
-├── ghidra_docs/         # Thư mục chứa PDF documents
-└── README.md            # File hướng dẫn này
-```
-
-## Lưu ý
-
-- Vector database được lưu trên Pinecone cloud, không lưu local
-- Sử dụng embedding model: `sentence-transformers/all-mpnet-base-v2` qua HuggingFace API
-- Pinecone free tier: 1 index với 100K vectors
+1. Tắt hoàn toàn từ System Tray (Windows) hoặc Dock (macOS)
+2. Mở lại Claude Desktop
+3. Click 🔌 icon → Verify `rag-knowledge` server active

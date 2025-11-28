@@ -1,2 +1,6 @@
-ghidra_rag_db/
 __pycache__/
+.env
+*.pyc
+*.pyo
+venv/
+.DS_Store
