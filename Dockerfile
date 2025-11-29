@@ -21,7 +21,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY main.py .
 COPY builder.py .
 COPY retriever.py .
-COPY knowledge.py .
 COPY prompts.py .
 
 # Copy documents folder (if exists)
