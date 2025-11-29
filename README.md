@@ -25,9 +25,24 @@ cp .env.example .env    # Linux/macOS
 
 # 3. Build Docker image
 docker build -t rag-mcp-server:latest .
+```
 
-# 4*. Build vector database from documents (DONT RUN)
-d.o.c.k.e.r run --rm -i --env-file .env rag-mcp-server:latest python /app/builder.py
+## Cập nhật Documents (Chỉ khi cần)
+
+**Cách update:**
+
+- Thêm file PDF/TXT mới vào `ghidra_docs/` (xóa các file có sẵn trong folder, có imple deduplicate nhưng ko đảm bảo)
+
+```bash
+# 1. Thêm/xóa files trong ghidra_docs/
+# builder.py tự động scan tất cả .pdf và .txt trong folder
+
+# 2. Rebuild vector database
+# Docker:
+docker run --rm -i --env-file .env rag-mcp-server:latest python /app/builder.py
+
+# Local (nếu không dùng Docker):
+python builder.py
 ```
 
 ## Kết nối Claude Desktop
