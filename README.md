@@ -63,10 +63,54 @@ Edit `~/.config/Claude/claude_desktop_config.json` (Linux) hoặc `~/Library/App
 ```bash
 # Linux/macOS: Make script executable
 chmod +x run_mcp_in_docker.sh
+
+# Linux: Add user to docker group + restart system
+sudo usermod -aG docker $USER
+# Then logout/login or restart system
+
+# Verify docker permission
+groups | grep docker
+docker ps
 ```
 
-**Restart Claude Desktop:**
+## Troubleshooting
 
-1. Tắt hoàn toàn từ System Tray (Windows) hoặc Dock (macOS)
-2. Mở lại Claude Desktop
-3. Click 🔌 icon → Verify `rag-knowledge` server active
+### Linux: Permission denied - Docker
+
+```bash
+# Check if user in docker group
+groups | grep docker
+
+# If not in group, add and restart
+sudo usermod -aG docker $USER
+# MUST logout/login or restart system
+
+# Quick fix (not permanent)
+sudo chmod 666 /var/run/docker.sock
+```
+
+### Test Docker manually
+
+```bash
+# Test Docker works
+docker ps
+
+# Test script directly
+./run_mcp_in_docker.sh
+
+# Test container (should wait for input, Ctrl+C to exit)
+docker run --rm -i --env-file .env rag-mcp-server:latest python -u /app/main.py
+```
+
+### Server không hiện trong Claude Desktop
+
+```bash
+# Check script executable
+ls -la run_mcp_in_docker.sh
+
+# Test image exists
+docker images | grep rag-mcp-server
+
+# Rebuild if needed
+docker build -t rag-mcp-server:latest .
+```
